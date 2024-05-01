@@ -38,6 +38,8 @@ public class PersonServiceImpl implements PersonService {
 
         String searchFirstNameElseLastName = firstName != null ? firstName : lastName;
         String searchLastNameElseFirstName = lastName != null ? lastName : firstName;
+        System.out.println("Agify and Genderize search name: " + searchFirstNameElseLastName);
+        System.out.println("Nationalize search name: " + searchLastNameElseFirstName);
 
         return Mono.zip(agifyService.fetch(searchFirstNameElseLastName), genderizeService.fetch(searchFirstNameElseLastName), nationalizeService.fetch(searchLastNameElseFirstName))
                 .flatMap(tuple -> {
