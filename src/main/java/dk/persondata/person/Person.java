@@ -1,4 +1,4 @@
-package dk.persondata.PersonService;
+package dk.persondata.person;
 
 import lombok.*;
 
