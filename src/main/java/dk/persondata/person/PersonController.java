@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/person")
+@RequestMapping("/api/person")
 public class PersonController {
     private final PersonService personService;
 
