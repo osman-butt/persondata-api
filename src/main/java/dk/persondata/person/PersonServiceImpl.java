@@ -4,21 +4,18 @@ import dk.persondata.dto.AgifyDTO;
 import dk.persondata.apiService.ApiService;
 import dk.persondata.dto.GenderizeDTO;
 import dk.persondata.dto.NationalizeDTO;
-import dk.persondata.person.Person;
-import dk.persondata.person.PersonService;
+import dk.persondata.exception.UnprocessableContent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class PersonServiceImpl implements PersonService {
     private final ApiService<AgifyDTO> agifyService;
     private final ApiService<GenderizeDTO> genderizeService;
     private final ApiService<NationalizeDTO> nationalizeService;
-    private final Set<Person> cache = new HashSet<>();
+    private final Map<String, Person> cache = new HashMap<>();
 
     public PersonServiceImpl (ApiService<AgifyDTO> agifyService, ApiService<GenderizeDTO> genderizeService, ApiService<NationalizeDTO> nationalizeService) {
         this.agifyService = agifyService;
@@ -26,30 +23,37 @@ public class PersonServiceImpl implements PersonService {
         this.nationalizeService = nationalizeService;
     }
 
-    public Mono<Person> getPerson(String name) {
-        if (isCached(name)) {
-            System.out.println("Returning cached result");
-            Optional<Person> optionalPerson = cache.stream().filter(person -> person.getFullName().equals(name)).findFirst();
-            if (optionalPerson.isPresent()) return Mono.just(optionalPerson.get());
+    public Mono<Person> getPerson(String firstName, String middleName, String lastName) {
+        Person person = new Person(firstName, middleName, lastName);
+
+        if (firstName == null && lastName == null) {
+            throw new UnprocessableContent("Invalid or missing firstName or lastName parameter");
         }
-        Mono<AgifyDTO> agifyDTO = agifyService.fetch(name);
-        Mono<GenderizeDTO> genderizeDTO = genderizeService.fetch(name);
-        Mono<NationalizeDTO> nationalizeDTO = nationalizeService.fetch(name);
-        return Mono.zip(agifyDTO, genderizeDTO, nationalizeDTO)
+
+        Person cachedPerson = cachedPerson(person);
+
+        if(cachedPerson != null) {
+            return Mono.just(cachedPerson);
+        }
+
+        String searchFirstNameElseLastName = firstName != null ? firstName : lastName;
+        String searchLastNameElseFirstName = lastName != null ? lastName : firstName;
+
+        return Mono.zip(agifyService.fetch(searchFirstNameElseLastName), genderizeService.fetch(searchFirstNameElseLastName), nationalizeService.fetch(searchLastNameElseFirstName))
                 .flatMap(tuple -> {
-                    Person person = toEntity(tuple.getT1(), tuple.getT2(), tuple.getT3());
-                    cacheResult(person);
-                    return Mono.just(person);
+                    Person personResponse = toEntity(person, tuple.getT1(), tuple.getT2(), tuple.getT3());
+                    cacheResult(personResponse);
+                    return Mono.just(personResponse);
                 });
     }
 
     // From dtos to Person object
-    private Person toEntity(AgifyDTO agify, GenderizeDTO genderize, NationalizeDTO nationalize) {
+    private Person toEntity(Person person, AgifyDTO agify, GenderizeDTO genderize, NationalizeDTO nationalize) {
         return Person.builder()
-                .fullName(agify.getName())
-                .firstName(agify.getName())
-                .middleName(agify.getName())
-                .lastName(agify.getName())
+                .fullName(person.getFullName())
+                .firstName(person.getFirstName())
+                .middleName(person.getMiddleName())
+                .lastName(person.getLastName())
                 .gender(genderize.getGender())
                 .genderProbability(genderize.getProbability() != null ? genderize.getProbability() : null)
                 .age(agify.getAge())
@@ -60,10 +64,11 @@ public class PersonServiceImpl implements PersonService {
     }
 
     private void cacheResult(Person person) {
-        cache.add(person);
+        cache.put(person.getFullName(), person);
     }
 
-    private boolean isCached(String name) {
-        return cache.stream().anyMatch(person -> person.getFullName().equals(name));
+    private Person cachedPerson(Person person) {
+        String name = person.getFullName();
+        return cache.get(name);
     }
 }

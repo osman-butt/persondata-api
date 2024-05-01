@@ -16,8 +16,10 @@ public class PersonController {
     }
 
     @GetMapping
-    public Mono<Person> getPerson(@RequestParam String name) {
-        return personService.getPerson(name);
+    public Mono<Person> getPerson(@RequestParam(name = "firstName", required = false) String firstName,
+                                  @RequestParam(name = "middleName", required = false) String middleName,
+                                  @RequestParam(name = "lastName", required = false) String lastName) {
+        return personService.getPerson(firstName, middleName, lastName);
     }
 
 }
