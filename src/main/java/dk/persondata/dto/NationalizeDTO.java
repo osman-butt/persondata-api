@@ -1,4 +1,4 @@
-package dk.persondata.NationalizeService;
+package dk.persondata.dto;
 
 import lombok.*;
 

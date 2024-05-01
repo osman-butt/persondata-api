@@ -1,26 +1,26 @@
-package dk.persondata.NationalizeService;
+package dk.persondata.apiService;
 
+import dk.persondata.dto.GenderizeDTO;
 import dk.persondata.exception.TooManyRequests;
 import dk.persondata.exception.UnprocessableContent;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-@Service
-@ConditionalOnProperty(value="service.fetch.type",havingValue = "sync")
-public class NationalizeServiceSyncImpl implements NationalizeService {
-    private final RestClient restClient;
+public class ApiServiceSyncImpl<T> implements ApiService<T>{
 
-    public NationalizeServiceSyncImpl(@Value("${nationalize.service.base-url}") String baseUrl) {
+    private final RestClient restClient;
+    private final Class<T> responseType;
+
+    public ApiServiceSyncImpl(String baseUrl, Class<T> responseType) {
         this.restClient = RestClient.create(baseUrl);
+        this.responseType = responseType;
     }
 
-    public Mono<NationalizeDTO> fetch(String name) {
+    @Override
+    public Mono<T> fetch(String name) {
         return Mono.just(Objects.requireNonNull(restClient.get()
                 .uri(uriBuilder -> uriBuilder.queryParam("name", name).build())
                 .accept(MediaType.APPLICATION_JSON)
@@ -31,6 +31,6 @@ public class NationalizeServiceSyncImpl implements NationalizeService {
                 .onStatus(status -> status.value() == 429, (request, response) -> {
                     throw new TooManyRequests("Request limit reached");
                 })
-                .body(NationalizeDTO.class)));
+                .body(responseType)));
     }
 }

@@ -1,4 +1,4 @@
-package dk.persondata.GenderizeService;
+package dk.persondata.dto;
 
 import lombok.*;
 

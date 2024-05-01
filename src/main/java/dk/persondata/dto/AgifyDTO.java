@@ -1,4 +1,4 @@
-package dk.persondata.AgifyService;
+package dk.persondata.dto;
 
 import lombok.*;
 
@@ -11,4 +11,5 @@ public class AgifyDTO {
     private String name;
     private int age;
     private int count;
+    private Double probability;
 }
