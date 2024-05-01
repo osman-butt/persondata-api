@@ -1,11 +1,11 @@
-package dk.persondata.PersonService;
+package dk.persondata.person;
 
-import dk.persondata.AgifyService.AgifyDTO;
-import dk.persondata.GenderizeService.GenderizeDTO;
-import dk.persondata.NationalizeService.NationalizeDTO;
-import dk.persondata.AgifyService.AgifyService;
-import dk.persondata.GenderizeService.GenderizeService;
-import dk.persondata.NationalizeService.NationalizeService;
+import dk.persondata.dto.AgifyDTO;
+import dk.persondata.apiService.ApiService;
+import dk.persondata.dto.GenderizeDTO;
+import dk.persondata.dto.NationalizeDTO;
+import dk.persondata.person.Person;
+import dk.persondata.person.PersonService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -14,15 +14,13 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
-public class PersonService {
-    private final AgifyService agifyService;
-    private final GenderizeService genderizeService;
-    private final NationalizeService nationalizeService;
+public class PersonServiceImpl implements PersonService {
+    private final ApiService<AgifyDTO> agifyService;
+    private final ApiService<GenderizeDTO> genderizeService;
+    private final ApiService<NationalizeDTO> nationalizeService;
     private final Set<Person> cache = new HashSet<>();
 
-    public PersonService(AgifyService agifyService,
-                         GenderizeService genderizeService,
-                         NationalizeService nationalizeService) {
+    public PersonServiceImpl (ApiService<AgifyDTO> agifyService, ApiService<GenderizeDTO> genderizeService, ApiService<NationalizeDTO> nationalizeService) {
         this.agifyService = agifyService;
         this.genderizeService = genderizeService;
         this.nationalizeService = nationalizeService;
@@ -53,9 +51,9 @@ public class PersonService {
                 .middleName(agify.getName())
                 .lastName(agify.getName())
                 .gender(genderize.getGender())
-                .genderProbability(genderize.getProbability())
+                .genderProbability(genderize.getProbability() != null ? genderize.getProbability() : null)
                 .age(agify.getAge())
-                .ageProbability(null)
+                .ageProbability(agify.getProbability() != null ? agify.getProbability() : null)
                 .country(!nationalize.getCountry().isEmpty() ? nationalize.getCountry().get(0).getCountry_id() : null)
                 .countryProbability(!nationalize.getCountry().isEmpty() ? nationalize.getCountry().get(0).getProbability() : null)
                 .build();
@@ -68,5 +66,4 @@ public class PersonService {
     private boolean isCached(String name) {
         return cache.stream().anyMatch(person -> person.getFullName().equals(name));
     }
-
 }
