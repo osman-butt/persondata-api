@@ -28,6 +28,18 @@ public class Person {
         setLastName(lastName);
     }
 
+    public void setFirstName(String firstName) {
+        this.firstName = capitalize(firstName != null ? firstName.trim() : null);
+    }
+
+    public void setMiddleName(String middleName) {
+        this.middleName = capitalize(middleName != null ? middleName.trim() : null);
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = capitalize(lastName != null ? lastName.trim() : null);
+    }
+
     public String getFullName() {
         return getFirstName()  + (getMiddleName()!=null ? " " + getMiddleName() : "") + (getLastName()!=null ? " " + getLastName() : "");
     }

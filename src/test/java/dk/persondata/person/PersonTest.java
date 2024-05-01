@@ -94,4 +94,40 @@ class PersonTest {
         assertEquals("Last", person.getLastName());
     }
 
+    @Test
+    void createPersonWithFirstNameAndMiddleNameAndLastName() {
+        // Arrange
+        Person person = new Person("  hARRy   ", " jaMEs   ", " POTter ");
+
+        // Act & Assert
+        assertEquals("Harry", person.getFirstName());
+        assertEquals("James", person.getMiddleName());
+        assertEquals("Potter", person.getLastName());
+        assertEquals("Harry James Potter", person.getFullName());
+    }
+
+    @Test
+    void createPersonWithFirstNameAndLastName() {
+        // Arrange
+        Person person = new Person("  hARRy   ", null, " Potter ");
+
+        // Act & Assert
+        assertEquals("Harry", person.getFirstName());
+        assertNull(person.getMiddleName());
+        assertEquals("Potter", person.getLastName());
+        assertEquals("Harry Potter", person.getFullName());
+    }
+
+    @Test
+    void createPersonWithFirstName() {
+        // Arrange
+        Person person = new Person("  hArry   ", null, null);
+
+        // Act & Assert
+        assertEquals("Harry", person.getFirstName());
+        assertNull(person.getMiddleName());
+        assertNull(person.getLastName());
+        assertEquals("Harry", person.getFullName());
+    }
+
 }
